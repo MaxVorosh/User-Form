@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <img src="/static/img/mars_emblem.png" alt="здесь должна была быть картинка, но не нашлась">
+    <h1>Аварийный доступ</h1>
+    <form action="" method="post" novalidate>
+        <div>
+            {{ form.csrf_token }}
+        </div>
+        {% for field in form if field.name != 'csrf_token' %}
+        <div>
+            {{ field.label() }}
+            {{ field() }}
+            {% for error in field.errors %}
+                <h6>{{ error }}</h6>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </form>
+{% endblock %}
