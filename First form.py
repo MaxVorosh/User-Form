@@ -7,7 +7,7 @@ from wtforms import StringField, PasswordField, SubmitField, IntegerField, Boole
 from wtforms.validators import DataRequired
 from wtforms.fields.html5 import EmailField
 from flask import Flask, render_template, redirect
-from flask_login import LoginManager, login_required, logout_user, login_user
+from flask_login import LoginManager, login_required, logout_user, login_user, current_user
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -43,7 +43,10 @@ class LoginForm(FlaskForm):
 
 @app.route('/')
 def main_page():
-    return 'Всё идёт по плану'
+    if current_user.is_authenticated:
+        return f'Приветствую, {current_user.name}'
+    else:
+        return 'Зарегестрируйтесь, чтобы я с вами поздоровался'
 
 
 @app.route('/login', methods=['GET', 'POST'])
