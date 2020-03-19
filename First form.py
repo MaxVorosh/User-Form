@@ -3,7 +3,7 @@ from data import db_session
 from data.User import User
 from data.Jobs import Jobs
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, IntegerField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, IntegerField, BooleanField, DateTimeField
 from wtforms.validators import DataRequired
 from wtforms.fields.html5 import EmailField
 from flask import Flask, render_template, redirect
@@ -17,6 +17,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
+    db_session.global_init('db/mars_explorer.db')
     session = db_session.create_session()
     return session.query(User).get(user_id)
 
@@ -41,12 +42,24 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Войти')
 
 
+class AddJobForm(FlaskForm):
+    team_lead = StringField('Id руководителя', validators=[DataRequired()])
+    job = StringField('Суть работы', validators=[DataRequired()])
+    size = IntegerField('Длительность работы', validators=[DataRequired()])
+    collaborators = StringField('Перечислите id астронавтов, выполняющих эту работу через запятую',
+                                validators=[DataRequired()])
+    start = DateTimeField('Время начала работы', validators=[DataRequired()])
+    stop = DateTimeField('Время окончания работы', validators=[DataRequired()])
+    finish = BooleanField('Работа завершена?')
+    submit = SubmitField('Добавить')
+
+
 @app.route('/')
 def main_page():
-    if current_user.is_authenticated:
-        return f'Приветствую, {current_user.name}'
-    else:
-        return 'Зарегестрируйтесь, чтобы я с вами поздоровался'
+    db_session.global_init('db/mars_explorer.db')
+    session = db_session.create_session()
+    data = session.query(Jobs).all()
+    return render_template('main.html', title='Главная страница', data=data)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -100,6 +113,23 @@ def register():
 def logout():
     logout_user()
     return redirect("/")
+
+
+@app.route('/addjob', methods=['GET', 'POST'])
+@login_required
+def addjob():
+    db_session.global_init('db/mars_explorer.db')
+    form = AddJobForm()
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        job = Jobs(team_leader=form.team_lead.data, job=form.job.data, work_size=form.size.data,
+                   collaborators=form.collaborators.data, start_date=form.start.data, end_date=form.stop.data,
+                   is_finished=form.finish.data)
+        current_user.jobs.append(job)
+        session.merge(current_user)
+        session.commit()
+        return redirect('/')
+    return render_template('AddJob.html', title='Добавление работы', form=form)
 
 
 if __name__ == '__main__':
