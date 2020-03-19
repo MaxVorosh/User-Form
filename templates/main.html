@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Работы</h1>
+        {% for job in data %}
+        <div>
+            <h5>{{job.job}}</h5>
+        </div>
+        {% endfor %}
+    </form>
+{% endblock %}
